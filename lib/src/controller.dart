@@ -236,23 +236,56 @@ class StringTagController<T extends String> extends TextfieldTagsController<T> {
     return added;
   }
 
+  // @override
+  // bool? onTagChanged(T tag) {
+  //   final ts = getTextSeparators;
+  //   final lc = getLetterCase;
+  //   final separator = ts?.cast<String?>().firstWhere(
+  //       (element) => tag.contains(element!) && tag.indexOf(element) != 0,
+  //       orElse: () => null);
+  //   if (separator != null) {
+  //     final splits = tag.split(separator);
+  //     final indexer = splits.length > 1 ? splits.length - 2 : splits.length - 1;
+  //     final tsv = lc == LetterCase.small
+  //         ? splits.elementAt(indexer).trim().toLowerCase()
+  //         : lc == LetterCase.capital
+  //             ? splits.elementAt(indexer).trim().toUpperCase()
+  //             : splits.elementAt(indexer).trim();
+  //     return _tagOperation(tsv as T);
+  //   }
+  //   return null;
+  // }
+
   @override
   bool? onTagChanged(T tag) {
-    final ts = getTextSeparators;
-    final lc = getLetterCase;
+    final ts = getTextSeparators; // Get the separators (like space, comma)
+    final lc = getLetterCase;     // Get the letter case setting (lowercase, uppercase)
+
+    // Check if the tag ends with any separator
     final separator = ts?.cast<String?>().firstWhere(
-        (element) => tag.contains(element!) && tag.indexOf(element) != 0,
+            (element) => tag.endsWith(element!),  // Detect separator at the end
         orElse: () => null);
+
     if (separator != null) {
-      final splits = tag.split(separator);
-      final indexer = splits.length > 1 ? splits.length - 2 : splits.length - 1;
+      // Split the tag by the separator and remove any empty splits
+      final splits = tag.split(separator).where((split) => split.isNotEmpty).toList();
+
+      // Get the last valid split
+      final indexer = splits.length - 1;
+
+      // Process the tag based on the letter case (small, capital, or normal)
       final tsv = lc == LetterCase.small
           ? splits.elementAt(indexer).trim().toLowerCase()
           : lc == LetterCase.capital
-              ? splits.elementAt(indexer).trim().toUpperCase()
-              : splits.elementAt(indexer).trim();
-      return _tagOperation(tsv as T);
+          ? splits.elementAt(indexer).trim().toUpperCase()
+          : splits.elementAt(indexer).trim();
+
+      // If the processed tag is not empty, create the tag
+      if (tsv.isNotEmpty) {
+        return _tagOperation(tsv as T);  // Create the tag and call the operation
+      }
     }
+
     return null;
   }
 
@@ -314,6 +347,7 @@ class DynamicTagController<T extends DynamicTagData>
     }
     return null;
   }
+
 
   @override
   bool? onTagSubmitted(T tag) {
